@@ -1,0 +1,9 @@
+torch>=2.2.0
+torchvision>=0.15.2
+git+https://github.com/openai/CLIP.git
+faiss-cpu>=1.7.4
+pandas>=2.0.3
+numpy>=1.24.3
+Pillow>=10.0.0
+tqdm>=4.66.0
+

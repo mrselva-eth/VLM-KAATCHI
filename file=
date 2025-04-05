@@ -1,0 +1,119 @@
+lib/clip_search.py""import argparse
+import json
+import sys
+
+# Assume these functions are defined elsewhere in the script or imported
+# from other modules.  For the purpose of this exercise, we only focus
+# on the main function and how it's updated.
+# load_model_and_data, search_by_text, search_by_image, multimodal_search,
+# clean_product_results, validate_fashion_image, check_text_image_coherence,
+# extract_dominant_colors
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Search for fashion products.')
+    parser.add_argument('--search_type', type=str, required=True, choices=['text', 'image', 'multimodal', 'validate', 'coherence'], help='Type of search to perform.')
+    parser.add_argument('--query', type=str, help='Text query for text or multimodal search.')
+    parser.add_argument('--image_path', type=str, help='Path to the image for image or multimodal search.')
+    parser.add_argument('--top_k', type=int, default=10, help='Number of results to return.')
+    parser.add_argument('--dominant_colors', type=str, help='Comma-separated list of dominant colors.')
+    parser.add_argument('--quiet', action='store_true', help='Suppress output messages.')
+    parser.add_argument('--color_detection', action='store_true', help='Enable color detection for image validation.')
+    return parser.parse_args()
+
+def main():
+    args = parse_args()
+    quiet = args.quiet
+
+    try:
+        # Initialize results with default empty list
+        results = []
+        
+        # Special case for validation
+        if args.search_type == "validate":
+            if not args.image_path:
+                if not quiet:
+                    print("Error: Image validation requires an image path", file=sys.stderr)
+                sys.exit(1)
+                
+            # Load model and data
+            model, preprocess, _, _, _, device = load_model_and_data(quiet)
+            
+            # Validate the image
+            validation_result = validate_fashion_image(args.image_path, model, preprocess, device, quiet)
+            
+            # Extract colors if requested
+            if args.color_detection:
+                validation_result["dominantColors"] = extract_dominant_colors(args.image_path)
+            
+            # Output validation results as JSON
+            print(json.dumps({"validation": validation_result}))
+            return
+        
+        # Special case for coherence check
+        if args.search_type == "coherence":
+            if not args.image_path or not args.query:
+                if not quiet:
+                    print("Error: Coherence check requires both image path and query", file=sys.stderr)
+                sys.exit(1)
+                
+            # Load model and data
+            model, preprocess, _, _, _, device = load_model_and_data(quiet)
+            
+            # Check text-image coherence
+            coherence_result = check_text_image_coherence(args.query, args.image_path, model, preprocess, device, quiet)
+            
+            # Output coherence results as JSON
+            print(json.dumps({"coherence": coherence_result}))
+            return
+        
+        # Check if we have the required arguments for other search types
+        if args.search_type == "text" and not args.query:
+            if not quiet:
+                print("Error: Text search requires a query", file=sys.stderr)
+            sys.exit(1)
+        
+        if args.search_type == "image" and not args.image_path:
+            if not quiet:
+                print("Error: Image search requires an image path", file=sys.stderr)
+            sys.exit(1)
+        
+        if args.search_type == "multimodal" and (not args.query or not args.image_path):
+            if not quiet:
+                print("Error: Multimodal search requires both query and image path", file=sys.stderr)
+            sys.exit(1)
+        
+        # Load model and data
+        model, preprocess, index, df, image_embeddings, device = load_model_and_data(quiet)
+        
+        # Parse dominant colors if provided
+        dominant_colors = None
+        if args.dominant_colors:
+            dominant_colors = args.dominant_colors.split(',')
+        
+        # Get the top_k parameter (updated to support higher values)
+        top_k = min(args.top_k, 100)  # Limit to 100 maximum results for efficiency
+        
+        # Perform search based on type
+        if args.search_type == "text":
+            results = search_by_text(args.query, model, index, df, image_embeddings, device, top_k, quiet)
+        
+        elif args.search_type == "image":
+            results = search_by_image(args.image_path, model, preprocess, index, df, image_embeddings, device, top_k, dominant_colors, quiet)
+        
+        elif args.search_type == "multimodal":
+            results = multimodal_search(args.query, args.image_path, model, preprocess, index, df, image_embeddings, device, top_k, dominant_colors, quiet)
+        
+        # Clean the results to ensure they are JSON serializable
+        results = clean_product_results(results, quiet)
+        
+        # Output results as JSON
+        print(json.dumps({"results": results}))
+
+    except Exception as e:
+        if not quiet:
+            print(f"Error: {str(e)}", file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+
