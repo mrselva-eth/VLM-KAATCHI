@@ -6,6 +6,8 @@ KAATCHI (meaning "Vision" in Tamil) is an advanced fashion search platform power
 
 ![image](https://github.com/user-attachments/assets/fbf62db2-1086-46c6-9ee2-d2f0f179860a)
 
+## Demo Video
+Link: https://drive.google.com/drive/folders/1On8nQc3aYIA0pfA3AFseu0Sl8-Y2DBts?usp=drive_link
 
 ## 🌟 Features
 
@@ -220,8 +222,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## Demo
-Link: https://drive.google.com/drive/folders/1On8nQc3aYIA0pfA3AFseu0Sl8-Y2DBts?usp=drive_link
+
 
 ## 📄 License
 
