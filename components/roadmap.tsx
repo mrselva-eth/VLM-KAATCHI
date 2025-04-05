@@ -44,7 +44,7 @@ export function Roadmap() {
           {/* Vertical line */}
           <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-0.5 bg-primary/20"></div>
 
-          {/* Q1 2023 - Completed */}
+          {/* Q1 2025 - Completed */}
           <div className="roadmap-item opacity-0 translate-y-8 transition-all duration-700 ease-out mb-16 relative">
             <div className="flex items-center justify-center absolute left-1/2 transform -translate-x-1/2 -top-4 z-10">
               <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
@@ -53,7 +53,7 @@ export function Roadmap() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="md:text-right md:pr-8 pt-6">
-                <h3 className="text-xl font-bold text-primary">Q1 2023</h3>
+                <h3 className="text-xl font-bold text-primary">Q1 2025</h3>
                 <h4 className="text-lg font-semibold mb-2">Foundation</h4>
                 <ul className="space-y-2 text-muted-foreground">
                   <li className="flex items-center md:justify-end">
@@ -81,7 +81,7 @@ export function Roadmap() {
             </div>
           </div>
 
-          {/* Q2 2023 - Completed */}
+          {/* Q1 2025 - Completed */}
           <div className="roadmap-item opacity-0 translate-y-8 transition-all duration-700 delay-200 ease-out mb-16 relative">
             <div className="flex items-center justify-center absolute left-1/2 transform -translate-x-1/2 -top-4 z-10">
               <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
@@ -98,7 +98,7 @@ export function Roadmap() {
                 </div>
               </div>
               <div className="md:border-l md:border-primary/20 md:pl-8 pt-6 md:order-2 order-1">
-                <h3 className="text-xl font-bold text-primary">Q2 2023</h3>
+                <h3 className="text-xl font-bold text-primary">Q1 2025</h3>
                 <h4 className="text-lg font-semibold mb-2">Vision Integration</h4>
                 <ul className="space-y-2 text-muted-foreground">
                   <li className="flex items-center">
@@ -118,7 +118,7 @@ export function Roadmap() {
             </div>
           </div>
 
-          {/* Q3-Q4 2023 - Completed */}
+          {/* Q1 2025 - Completed */}
           <div className="roadmap-item opacity-0 translate-y-8 transition-all duration-700 delay-400 ease-out mb-16 relative">
             <div className="flex items-center justify-center absolute left-1/2 transform -translate-x-1/2 -top-4 z-10">
               <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
@@ -127,7 +127,7 @@ export function Roadmap() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="md:text-right md:pr-8 pt-6">
-                <h3 className="text-xl font-bold text-primary">Q3-Q4 2023</h3>
+                <h3 className="text-xl font-bold text-primary">Q1 2025</h3>
                 <h4 className="text-lg font-semibold mb-2">Platform Enhancement</h4>
                 <ul className="space-y-2 text-muted-foreground">
                   <li className="flex items-center md:justify-end">
@@ -155,7 +155,7 @@ export function Roadmap() {
             </div>
           </div>
 
-          {/* Q1-Q2 2024 - Current */}
+          {/* Q1-Q2 2025 - Current */}
           <div className="roadmap-item opacity-0 translate-y-8 transition-all duration-700 delay-600 ease-out mb-16 relative">
             <div className="flex items-center justify-center absolute left-1/2 transform -translate-x-1/2 -top-4 z-10">
               <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
@@ -172,7 +172,7 @@ export function Roadmap() {
                 </div>
               </div>
               <div className="md:border-l md:border-primary/20 md:pl-8 pt-6 md:order-2 order-1">
-                <h3 className="text-xl font-bold text-blue-500">Q1-Q2 2024</h3>
+                <h3 className="text-xl font-bold text-blue-500">Q1-Q2 2025</h3>
                 <h4 className="text-lg font-semibold mb-2">Expansion & Refinement</h4>
                 <ul className="space-y-2 text-muted-foreground">
                   <li className="flex items-center">
@@ -192,7 +192,7 @@ export function Roadmap() {
             </div>
           </div>
 
-          {/* Q3-Q4 2024 - Future */}
+          {/* Q3-Q4 2025 - Future */}
           <div className="roadmap-item opacity-0 translate-y-8 transition-all duration-700 delay-800 ease-out mb-16 relative">
             <div className="flex items-center justify-center absolute left-1/2 transform -translate-x-1/2 -top-4 z-10">
               <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center">
@@ -201,7 +201,7 @@ export function Roadmap() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="md:text-right md:pr-8 pt-6">
-                <h3 className="text-xl font-bold text-gray-500">Q3-Q4 2024</h3>
+                <h3 className="text-xl font-bold text-gray-500">Q3-Q4 2025</h3>
                 <h4 className="text-lg font-semibold mb-2">Advanced Features</h4>
                 <ul className="space-y-2 text-muted-foreground">
                   <li className="flex items-center md:justify-end">
