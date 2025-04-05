@@ -2,6 +2,11 @@
 
 KAATCHI (meaning "Vision" in Tamil) is an advanced fashion search platform powered by vision-language models. It bridges the gap between visual inspiration and product discovery, making fashion search intuitive and natural.
 
+## Interface 
+
+![image](https://github.com/user-attachments/assets/fbf62db2-1086-46c6-9ee2-d2f0f179860a)
+
+
 ## 🌟 Features
 
 - **Multiple Search Methods**:
