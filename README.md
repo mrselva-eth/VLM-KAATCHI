@@ -20,6 +20,23 @@ Link: https://drive.google.com/drive/folders/1On8nQc3aYIA0pfA3AFseu0Sl8-Y2DBts?u
 - **User Accounts**: Create an account to save your favorite items, track your search history, and manage your cart
 - **Analytics Dashboard**: View your search patterns and engagement metrics
 - **Admin Dashboard**: For administrators to monitor platform usage and performance
+- **KAI Token**: Use KAI tokens to interact with AI-powered features on the platform.
+
+## 🪙 KAI Token
+
+KAI is the native token of the KAATCHI platform, used to access AI-powered features such as:
+
+- **AI-Powered Chat**: Interact with the fashion assistant for personalized recommendations.
+- **Advanced Search**: Perform text, image, and multimodal searches to find fashion items.
+
+### Earning KAI
+
+- **Signup Bonus**: New users receive a signup bonus of 100 KAI.
+
+### Using KAI
+
+- Each AI-powered interaction costs 1 KAI.
+- You can view your KAI balance in your profile.
 
 ## 🛠️ Technology Stack
 
@@ -44,7 +61,7 @@ Link: https://drive.google.com/drive/folders/1On8nQc3aYIA0pfA3AFseu0Sl8-Y2DBts?u
 
 ```shellscript
 git clone https://github.com/yourusername/kaatchi-fashion-vlm.git
-cd kaatchi-fashion-vlm
+cd kaatchi-fashion-vlm 
 ```
 
 ### 2. Install JavaScript dependencies
