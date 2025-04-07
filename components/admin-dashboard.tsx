@@ -18,6 +18,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { format } from "date-fns"
 import { useTheme } from "next-themes"
+import { AdminKaiStats } from "@/components/admin-kai-stats"
+import Image from "next/image"
 
 export function AdminDashboard() {
   const [analytics, setAnalytics] = useState<any>(null)
@@ -131,7 +133,7 @@ export function AdminDashboard() {
       <h1 className="text-3xl font-bold mb-8 text-center">Admin Dashboard</h1>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-9 gap-4">
         <div className="border rounded-lg p-4 bg-background hover:border-primary transition-colors">
           <div className="flex items-center gap-2 mb-2">
             <Users className="h-5 w-5 text-primary" />
@@ -150,6 +152,28 @@ export function AdminDashboard() {
           </div>
           <p className="text-2xl font-bold">{formatNumber(analytics.totalImages || 0)}</p>
           <p className="text-sm text-muted-foreground mt-1">In dataset</p>
+        </div>
+
+        <div className="border rounded-lg p-4 bg-background hover:border-primary transition-colors">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="relative h-5 w-5">
+              <Image src="/kai.png" alt="KAI" width={20} height={20} className="object-contain" />
+            </div>
+            <h3 className="font-medium">KAI Claimed</h3>
+          </div>
+          <p className="text-2xl font-bold">{formatNumber(analytics.totalKaiClaimed || 0)}</p>
+          <p className="text-sm text-muted-foreground mt-1">Total bonus claimed</p>
+        </div>
+
+        <div className="border rounded-lg p-4 bg-background hover:border-primary transition-colors">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="relative h-5 w-5">
+              <Image src="/kai.png" alt="KAI" width={20} height={20} className="object-contain" />
+            </div>
+            <h3 className="font-medium">KAI Spent</h3>
+          </div>
+          <p className="text-2xl font-bold">{formatNumber(analytics.totalKaiSpent || 0)}</p>
+          <p className="text-sm text-muted-foreground mt-1">Total used on features</p>
         </div>
 
         <div className="border rounded-lg p-4 bg-background hover:border-primary transition-colors">
@@ -253,16 +277,16 @@ export function AdminDashboard() {
                   {/* Area under the line - with very low opacity */}
                   <path
                     d={`
-                    M 0,${100 - (userGrowthData[0].count / maxUserGrowth) * 100}
-                    ${userGrowthData
-                      .map((day: any, index: number) => {
-                        const x = (index / (userGrowthData.length - 1)) * 100
-                        const y = 100 - (day.count / maxUserGrowth) * 100
-                        return `L ${x},${y}`
-                      })
-                      .join(" ")}
-                    L 100,100 L 0,100 Z
-                  `}
+                M 0,${100 - (userGrowthData[0].count / maxUserGrowth) * 100}
+                ${userGrowthData
+                  .map((day: any, index: number) => {
+                    const x = (index / (userGrowthData.length - 1)) * 100
+                    const y = 100 - (day.count / maxUserGrowth) * 100
+                    return `L ${x},${y}`
+                  })
+                  .join(" ")}
+                L 100,100 L 0,100 Z
+              `}
                     fill="url(#growthGradient)"
                     opacity="0.05"
                   />
@@ -558,16 +582,16 @@ export function AdminDashboard() {
                   {/* Area under the line - with very low opacity */}
                   <path
                     d={`
-                    M 0,${100 - (activityByHour[0].count / maxHourlyActivity) * 100}
-                    ${activityByHour
-                      .map((hour: any, index: number) => {
-                        const x = (index / (activityByHour.length - 1)) * 100
-                        const y = 100 - (hour.count / maxHourlyActivity) * 100
-                        return `L ${x},${y}`
-                      })
-                      .join(" ")}
-                    L 100,100 L 0,100 Z
-                  `}
+                M 0,${100 - (activityByHour[0].count / maxHourlyActivity) * 100}
+                ${activityByHour
+                  .map((hour: any, index: number) => {
+                    const x = (index / (activityByHour.length - 1)) * 100
+                    const y = 100 - (hour.count / maxHourlyActivity) * 100
+                    return `L ${x},${y}`
+                  })
+                  .join(" ")}
+                L 100,100 L 0,100 Z
+              `}
                     fill="url(#activityGradient)"
                     opacity="0.05"
                   />
@@ -722,30 +746,32 @@ export function AdminDashboard() {
             Top Search Terms
           </h3>
 
-          <div className="space-y-2">
-            {(analytics.topSearchTerms || []).length > 0 ? (
-              (analytics.topSearchTerms || []).map((term: any, index: number) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center p-3 hover:bg-muted rounded-md transition-colors cursor-pointer"
-                >
-                  <span className="flex items-center">
-                    <span className="w-8 h-8 flex items-center justify-center rounded-full bg-primary/10 text-primary mr-3 text-sm font-bold hover:bg-primary hover:text-white transition-colors">
-                      {index + 1}
+          <div className="max-h-[300px] overflow-y-auto pr-2">
+            <div className="space-y-2">
+              {(analytics.topSearchTerms || []).length > 0 ? (
+                (analytics.topSearchTerms || []).map((term: any, index: number) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center p-3 hover:bg-muted rounded-md transition-colors cursor-pointer"
+                  >
+                    <span className="flex items-center">
+                      <span className="w-8 h-8 flex items-center justify-center rounded-full bg-primary/10 text-primary mr-3 text-sm font-bold hover:bg-primary hover:text-white transition-colors">
+                        {index + 1}
+                      </span>
+                      <span className="font-medium">{term._id}</span>
                     </span>
-                    <span className="font-medium">{term._id}</span>
-                  </span>
-                  <span className="text-sm bg-primary/10 text-primary px-3 py-1 rounded-full font-medium hover:bg-primary hover:text-white transition-colors">
-                    {term.count} searches
-                  </span>
+                    <span className="text-sm bg-primary/10 text-primary px-3 py-1 rounded-full font-medium hover:bg-primary hover:text-white transition-colors">
+                      {term.count} searches
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Search className="h-16 w-16 mx-auto mb-3 opacity-30" />
+                  <p>No search data available yet</p>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <Search className="h-16 w-16 mx-auto mb-3 opacity-30" />
-                <p>No search data available yet</p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -793,6 +819,9 @@ export function AdminDashboard() {
           Last updated: {format(new Date(), "MMM d, yyyy 'at' h:mm a")}
         </div>
       </div>
+
+      {/* KAI Credits Statistics */}
+      <AdminKaiStats />
     </div>
   )
 }

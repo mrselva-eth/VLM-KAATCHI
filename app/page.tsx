@@ -17,7 +17,7 @@ export default function Home() {
       <Roadmap />
       <Testimonials />
       <Newsletter />
-      <Footer />
+      <Footer/>
     </main>
   )
 }

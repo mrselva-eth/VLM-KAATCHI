@@ -19,6 +19,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import Link from "next/link"
+import { deductKai } from "@/lib/kai-service"
+import { useKai } from "@/lib/kai-context"
+import Image from "next/image"
 
 interface SearchResult {
   id: string
@@ -36,14 +39,12 @@ interface SearchResult {
   material?: string
 }
 
-// Update the interface to include isLoading and setIsLoading props
-interface SearchSectionProps {
-  onResultsChange?: (results: SearchResult[], searchInfo?: { query?: string; type?: string; image?: string }) => void
-  filters?: Record<string, string>
-  hasResults?: boolean
-  onClearResults?: () => void
-  isLoading?: boolean
-  setIsLoading?: (loading: boolean) => void
+// Update the interface to match the updated function signature
+// Add this after the SearchResult interface
+interface SearchInfo {
+  query?: string
+  type?: string
+  image?: string
 }
 
 // Update the component to accept and use these props
@@ -54,7 +55,14 @@ export function SearchSection({
   onClearResults,
   isLoading: parentIsLoading,
   setIsLoading: setParentIsLoading,
-}: SearchSectionProps) {
+}: {
+  onResultsChange?: (results: SearchResult[], searchInfo?: SearchInfo) => void
+  filters?: Record<string, string>
+  hasResults?: boolean
+  onClearResults?: () => void
+  isLoading?: boolean
+  setIsLoading?: (loading: boolean) => void
+}) {
   // Add auth hook
   const { isAuthenticated } = useAuth()
   const [searchQuery, setSearchQuery] = useState("")
@@ -71,6 +79,8 @@ export function SearchSection({
   const [showLoginDialog, setShowLoginDialog] = useState(false)
   const router = useRouter()
   const [showAuthDialog, setShowAuthDialog] = useState(false)
+  const [showInsufficientKaiDialog, setShowInsufficientKaiDialog] = useState(false)
+  const { balance, refreshBalance } = useKai()
 
   // Sync local loading state with parent loading state
   useEffect(() => {
@@ -110,14 +120,19 @@ export function SearchSection({
     }
   }
 
-  // Update the handleSearch function to not set isLoading to false immediately
-  // This will allow the parent component to control when loading is complete
+  // Update the handleSearch function to check KAI balance and deduct KAI
   const handleSearch = useCallback(async () => {
     if (isLoading) return
 
     // Check if user is authenticated
     if (!isAuthenticated) {
       setShowAuthDialog(true)
+      return
+    }
+
+    // Check if user has enough KAI
+    if (balance < 1) {
+      setShowInsufficientKaiDialog(true)
       return
     }
 
@@ -129,17 +144,30 @@ export function SearchSection({
       // Determine search type based on inputs
       const searchType = activeSearchType
 
-      // Track search analytics for authenticated users
-      if (isAuthenticated) {
-        await trackAnalytics(
-          searchType === "text" ? "search_text" : searchType === "image" ? "search_image" : "search_multimodal",
-          searchQuery,
-          {
-            hasImage: !!selectedFile,
-            timestamp: new Date().toISOString(),
-          },
-        )
+      // Deduct KAI for the search
+      const deductResult = await deductKai("search", `${searchType} search: ${searchQuery || "No query"}`)
+
+      if (!deductResult.success) {
+        if (deductResult.balance !== undefined && deductResult.balance < 1) {
+          setShowInsufficientKaiDialog(true)
+          setIsLoading(false)
+          return
+        }
+        throw new Error("Failed to deduct KAI")
       }
+
+      // Update KAI balance
+      await refreshBalance()
+
+      // Track search analytics for authenticated users
+      await trackAnalytics(
+        searchType === "text" ? "search_text" : searchType === "image" ? "search_image" : "search_multimodal",
+        searchQuery,
+        {
+          hasImage: !!selectedFile,
+          timestamp: new Date().toISOString(),
+        },
+      )
 
       // Create form data for the request
       const formData = new FormData()
@@ -255,11 +283,28 @@ export function SearchSection({
       }
       setIsLoading(false) // Set loading to false for errors
     }
-  }, [searchQuery, selectedFile, activeSearchType, filters, isLoading, onResultsChange, previewUrl, isAuthenticated])
+  }, [
+    searchQuery,
+    selectedFile,
+    activeSearchType,
+    filters,
+    isLoading,
+    onResultsChange,
+    previewUrl,
+    isAuthenticated,
+    balance,
+    refreshBalance,
+  ])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !isSearchDisabled()) {
       handleSearch()
+    }
+  }
+
+  const handleClearResults = () => {
+    if (onClearResults) {
+      onClearResults()
     }
   }
 
@@ -306,13 +351,6 @@ export function SearchSection({
     setCoherenceSimilarity(null)
   }
 
-  // Function to handle clearing results
-  const handleClearResults = () => {
-    if (onClearResults) {
-      onClearResults()
-    }
-  }
-
   // Add this function to handle login redirect
   const handleLoginRedirect = () => {
     router.push("/login")
@@ -323,8 +361,6 @@ export function SearchSection({
     router.push("/signup")
   }
 
-  // Add this at the end of the component, just before the final closing tag
-  // Add the login dialog after the main component content
   return (
     <>
       <section className="py-2 bg-background border-b border-input">
@@ -348,6 +384,12 @@ export function SearchSection({
                     <span>New Search</span>
                   </Button>
                 )}
+              </div>
+
+              {/* KAI cost indicator */}
+              <div className="ml-auto flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-full text-xs">
+                <Image src="/kai.png" alt="KAI" width={12} height={12} />
+                <span>Cost: 1 KAI per search</span>
               </div>
 
               {!isSearchOpen && (
@@ -604,18 +646,6 @@ export function SearchSection({
                     </div>
                   </div>
                 )}
-
-                {/* Remove or comment out the loading indicator in the dropdown */}
-                {/* {isLoading && (
-                  <div className="mt-4 flex items-center justify-center">
-                    <div className="flex space-x-2 items-center">
-                      <div className="h-2 w-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]"></div>
-                      <div className="h-2 w-2 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]"></div>
-                      <div className="h-2 w-2 rounded-full bg-primary animate-bounce"></div>
-                      <span className="ml-2 text-sm text-muted-foreground">Searching...</span>
-                    </div>
-                  </div>
-                )} */}
               </div>
             )}
 
@@ -648,6 +678,31 @@ export function SearchSection({
                 Sign Up
               </Link>
             </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Insufficient KAI Dialog */}
+      <Dialog open={showInsufficientKaiDialog} onOpenChange={setShowInsufficientKaiDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Insufficient KAI Balance</DialogTitle>
+            <DialogDescription>
+              You need at least 1 KAI to perform a search. Your current balance is {balance} KAI.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center my-4">
+            <div className="relative h-16 w-16">
+              <Image src="/kai.png" alt="KAI Token" fill className="object-contain" />
+            </div>
+          </div>
+          <DialogFooter className="flex flex-col gap-2 mt-4">
+            <Button
+              className="w-full bg-primary text-primary-foreground"
+              onClick={() => setShowInsufficientKaiDialog(false)}
+            >
+              OK
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

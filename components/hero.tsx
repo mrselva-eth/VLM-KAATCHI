@@ -7,12 +7,14 @@ import { useTheme } from "next-themes"
 import { useAuth } from "@/lib/auth-context"
 import { useEffect, useState } from "react"
 import { CheckCircle, Search, MessageSquare, ArrowRight } from "lucide-react"
+import { SignupBonusModal } from "@/components/signup-bonus-modal"
 
 export function Hero() {
   const { theme } = useTheme()
   const { user, isAuthenticated } = useAuth()
   const [showLoginSuccess, setShowLoginSuccess] = useState(false)
   const [showSignupSuccess, setShowSignupSuccess] = useState(false)
+  const [showBonusModal, setShowBonusModal] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
   const isLightTheme = theme === "light"
 
@@ -34,6 +36,7 @@ export function Hero() {
       const hasJustSignedUp = sessionStorage.getItem("justSignedUp")
       if (hasJustSignedUp === "true") {
         setShowSignupSuccess(true)
+        setShowBonusModal(true)
         // Remove the flag after showing the message
         setTimeout(() => {
           sessionStorage.removeItem("justSignedUp")
@@ -48,8 +51,12 @@ export function Hero() {
     setIsVisible(true)
   }, [])
 
+  const handleCloseBonusModal = () => {
+    setShowBonusModal(false)
+  }
+
   return (
-    <section className="pt-6 pb-12 md:pt-10 md:pb-16 lg:pt-12 lg:pb-24 bg-background text-foreground relative">
+    <section className="pt-6 pb-12 md:pt-10 md:pb-16 lg:pt-12 lg-pb-24 bg-background text-foreground relative">
       {/* Background decorative elements */}
       <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-primary/5 rounded-bl-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-primary/5 rounded-tr-full blur-3xl" />
@@ -158,6 +165,9 @@ export function Hero() {
           <span>Welcome to KAATCHI, {user?.firstName || "User"}! Your account has been successfully created.</span>
         </div>
       )}
+
+      {/* Signup bonus modal */}
+      {showBonusModal && <SignupBonusModal onClose={handleCloseBonusModal} />}
     </section>
   )
 }

@@ -13,6 +13,8 @@ import { format } from "date-fns"
 // Add this import at the top of the file
 import { trackAnalytics } from "@/lib/analytics"
 import { useAuth } from "@/lib/auth-context"
+import { deductKai } from "@/lib/kai-service"
+import { useKai } from "@/lib/kai-context"
 
 // First, add these imports at the top of the file (after existing imports)
 import {
@@ -52,6 +54,7 @@ interface Message {
 export function ChatInterface() {
   // Add the useAuth hook to check if the user is authenticated
   const { isAuthenticated } = useAuth()
+  const { balance, refreshBalance } = useKai()
   const router = useRouter()
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -75,6 +78,7 @@ export function ChatInterface() {
   const [currentSearchIndex, setCurrentSearchIndex] = useState(0)
   // Then, add this state near the other state declarations
   const [showAuthDialog, setShowAuthDialog] = useState(false)
+  const [showInsufficientKaiDialog, setShowInsufficientKaiDialog] = useState(false)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
@@ -209,13 +213,19 @@ export function ChatInterface() {
     }
   }
 
-  // Modify the handleSendMessage function to check authentication before sending a message
+  // Modify the handleSendMessage function to check authentication and KAI balance before sending a message
   const handleSendMessage = async () => {
     if ((!input.trim() && !selectedFile) || isLoading) return
 
     // Check if user is authenticated
     if (!isAuthenticated) {
       setShowAuthDialog(true)
+      return
+    }
+
+    // Check if user has enough KAI
+    if (balance < 1) {
+      setShowInsufficientKaiDialog(true)
       return
     }
 
@@ -234,6 +244,24 @@ export function ChatInterface() {
     setPreviewUrl(null)
 
     try {
+      // Deduct KAI for the chat message
+      const deductResult = await deductKai(
+        "chat",
+        `Chat message: ${input.substring(0, 50)}${input.length > 50 ? "..." : ""}`,
+      )
+
+      if (!deductResult.success) {
+        if (deductResult.balance !== undefined && deductResult.balance < 1) {
+          setShowInsufficientKaiDialog(true)
+          setIsLoading(false)
+          return
+        }
+        throw new Error("Failed to deduct KAI")
+      }
+
+      // Update KAI balance
+      await refreshBalance()
+
       // Track the chat query if the user is authenticated
       if (isAuthenticated) {
         await trackAnalytics("chat_query", input, {
@@ -358,8 +386,6 @@ export function ChatInterface() {
     )
   }
 
-  // Add this at the end of the component, right before the final closing tag
-  // Add the authentication dialog
   return (
     <>
       {/* Existing component JSX */}
@@ -684,6 +710,13 @@ export function ChatInterface() {
               <span className="sr-only">Upload file</span>
             </Button>
             <Input type="file" accept="image/*" onChange={handleFileChange} className="hidden" ref={fileInputRef} />
+
+            {/* Add KAI cost indicator here, before the input field */}
+            <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-full text-xs">
+              <Image src="/kai.png" alt="KAI" width={12} height={12} />
+              <span>Cost: 1 KAI per message</span>
+            </div>
+
             <Input
               placeholder="Ask about fashion items or upload an image..."
               value={input}
@@ -702,6 +735,8 @@ export function ChatInterface() {
               <span className="sr-only">Send</span>
             </Button>
           </div>
+
+          {/* Remove the existing KAI cost indicator that was here */}
         </div>
       </div>
 
@@ -725,6 +760,31 @@ export function ChatInterface() {
                 Sign Up
               </Link>
             </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Insufficient KAI Dialog */}
+      <Dialog open={showInsufficientKaiDialog} onOpenChange={setShowInsufficientKaiDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Insufficient KAI Balance</DialogTitle>
+            <DialogDescription>
+              You need at least 1 KAI to send a message. Your current balance is {balance} KAI.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center my-4">
+            <div className="relative h-16 w-16">
+              <Image src="/kai.png" alt="KAI Token" fill className="object-contain" />
+            </div>
+          </div>
+          <DialogFooter className="flex flex-col gap-2 mt-4">
+            <Button
+              className="w-full bg-primary text-primary-foreground"
+              onClick={() => setShowInsufficientKaiDialog(false)}
+            >
+              OK
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

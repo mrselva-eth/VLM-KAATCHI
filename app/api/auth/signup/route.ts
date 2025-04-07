@@ -41,6 +41,8 @@ export async function POST(request: Request) {
       password: hashedPassword,
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
+      kaiBalance: 0, // Initialize KAI balance to 0
+      bonusClaimed: false, // Initialize bonus claimed flag
     }
 
     // Insert user into database

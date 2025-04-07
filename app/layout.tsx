@@ -4,6 +4,7 @@ import localFont from "next/font/local"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/lib/auth-context"
+import { KaiProvider } from "@/lib/kai-context"
 
 // Load Didot font
 const didot = localFont({
@@ -36,7 +37,9 @@ export default function RootLayout({
     <html lang="en" className={`${didot.variable} ${bastro.variable}`}>
       <body className={didot.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <KaiProvider>{children}</KaiProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

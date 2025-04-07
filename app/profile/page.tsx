@@ -29,6 +29,7 @@ import { useTheme } from "next-themes"
 import { AnalyticsDashboard } from "@/components/analytics-dashboard"
 import { AdminDashboard } from "@/components/admin-dashboard"
 import { checkIsAdmin } from "@/lib/admin"
+import { KaiTransactions } from "@/components/kai-transactions"
 
 interface CartItem {
   productId: string
@@ -76,6 +77,11 @@ export default function ProfilePage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const { theme } = useTheme()
   const isLightTheme = theme === "light"
+
+  // Add these pagination state variables after the other state declarations
+  const [cartCurrentPage, setCartCurrentPage] = useState(1)
+  const [wishlistCurrentPage, setWishlistCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   // Primary color based on theme
   const primaryColor = isLightTheme ? "text-[#7e3b92]" : "text-[#2c8e59]"
@@ -303,6 +309,22 @@ export default function ProfilePage() {
     router.back()
   }
 
+  // Add these functions after other handler functions but before the return statement
+  const getCartItemsForCurrentPage = () => {
+    const startIndex = (cartCurrentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    return cartItems.slice(startIndex, endIndex)
+  }
+
+  const getWishlistItemsForCurrentPage = () => {
+    const startIndex = (wishlistCurrentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    return wishlistItems.slice(startIndex, endIndex)
+  }
+
+  const totalCartPages = Math.ceil(cartItems.length / itemsPerPage)
+  const totalWishlistPages = Math.ceil(wishlistItems.length / itemsPerPage)
+
   return (
     <main className="min-h-screen flex flex-col bg-background">
       <Navbar />
@@ -453,52 +475,96 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 ) : cartItems.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {cartItems.map((item) => (
-                      <div key={item.productId} className="border rounded-lg p-4 flex gap-4 group relative">
-                        <Link
-                          href={`/product/${item.productId}`}
-                          className="h-24 w-24 relative rounded-md overflow-hidden"
-                        >
-                          <Image
-                            src={item.product.image || "/placeholder.svg?height=100&width=100"}
-                            alt={item.product.name}
-                            fill
-                            className="object-cover"
-                            onError={(e) => {
-                              ;(e.target as HTMLImageElement).src = "/placeholder.svg?height=100&width=100"
-                            }}
-                          />
-                        </Link>
-                        <div className="flex-1">
-                          <Link href={`/product/${item.productId}`} className="font-medium hover:text-primary">
-                            {item.product.name}
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {getCartItemsForCurrentPage().map((item) => (
+                        <div key={item.productId} className="border rounded-lg p-4 flex gap-4 group relative">
+                          <Link
+                            href={`/product/${item.productId}`}
+                            className="h-24 w-24 relative rounded-md overflow-hidden"
+                          >
+                            <Image
+                              src={item.product.image || "/placeholder.svg?height=100&width=100"}
+                              alt={item.product.name}
+                              fill
+                              className="object-cover"
+                              onError={(e) => {
+                                ;(e.target as HTMLImageElement).src = "/placeholder.svg?height=100&width=100"
+                              }}
+                            />
                           </Link>
-                          <div className="flex justify-between mt-1">
-                            <span className="text-sm text-muted-foreground">
-                              {item.product.baseColor} {item.product.articleType}
-                            </span>
-                            <span className={`font-medium ${primaryColor}`}>{item.product.price}</span>
+                          <div className="flex-1">
+                            <Link href={`/product/${item.productId}`} className="font-medium hover:text-primary">
+                              {item.product.name}
+                            </Link>
+                            <div className="flex justify-between mt-1">
+                              <span className="text-sm text-muted-foreground">
+                                {item.product.baseColor} {item.product.articleType}
+                              </span>
+                              <span className={`font-medium ${primaryColor}`}>{item.product.price}</span>
+                            </div>
+                            <div className="flex justify-between items-center mt-2">
+                              <span className="text-sm">Quantity: {item.quantity}</span>
+                              <span className="text-sm text-muted-foreground">
+                                Added {format(new Date(item.addedAt), "MMM d, yyyy")}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex justify-between items-center mt-2">
-                            <span className="text-sm">Quantity: {item.quantity}</span>
-                            <span className="text-sm text-muted-foreground">
-                              Added {format(new Date(item.addedAt), "MMM d, yyyy")}
-                            </span>
-                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20"
+                            onClick={() => removeFromCart(item.productId)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Remove from cart</span>
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Pagination for cart */}
+                    {totalCartPages > 1 && (
+                      <div className="flex justify-center mt-6 gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCartCurrentPage((prev) => Math.max(prev - 1, 1))}
+                          disabled={cartCurrentPage === 1}
+                        >
+                          Previous
+                        </Button>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: totalCartPages }, (_, i) => i + 1).map((page) => (
+                            <Button
+                              key={page}
+                              variant={cartCurrentPage === page ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setCartCurrentPage(page)}
+                              className={`w-8 h-8 p-0 ${
+                                cartCurrentPage === page ? "bg-primary text-primary-foreground" : ""
+                              }`}
+                            >
+                              {page}
+                            </Button>
+                          ))}
                         </div>
                         <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20"
-                          onClick={() => removeFromCart(item.productId)}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCartCurrentPage((prev) => Math.min(prev + 1, totalCartPages))}
+                          disabled={cartCurrentPage === totalCartPages}
                         >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Remove from cart</span>
+                          Next
                         </Button>
                       </div>
-                    ))}
-                  </div>
+                    )}
+
+                    <div className="text-center mt-2 text-sm text-muted-foreground">
+                      Showing {Math.min(cartItems.length, (cartCurrentPage - 1) * itemsPerPage + 1)}-
+                      {Math.min(cartCurrentPage * itemsPerPage, cartItems.length)} of {cartItems.length} items
+                    </div>
+                  </>
                 ) : (
                   <div className="text-center py-12 border rounded-lg">
                     <ShoppingCart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -529,52 +595,97 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 ) : wishlistItems.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {wishlistItems.map((item) => (
-                      <div key={item.productId} className="border rounded-lg overflow-hidden group relative">
-                        <Link href={`/product/${item.productId}`} className="block">
-                          <div className="aspect-square relative">
-                            <Image
-                              src={item.product.image || "/placeholder.svg?height=300&width=300"}
-                              alt={item.product.name}
-                              fill
-                              className="object-cover"
-                              onError={(e) => {
-                                ;(e.target as HTMLImageElement).src = "/placeholder.svg?height=300&width=300"
-                              }}
-                            />
-                            {item.product.brand && (
-                              <div
-                                className={`absolute top-2 left-2 ${primaryBgColor} text-white px-2 py-0.5 rounded text-xs font-medium`}
-                              >
-                                {item.product.brand}
-                              </div>
-                            )}
-                          </div>
-                          <div className="p-3">
-                            <h3 className="font-medium text-sm line-clamp-1 group-hover:text-primary transition-colors">
-                              {item.product.name}
-                            </h3>
-                            <div className="flex justify-between items-center mt-1">
-                              <span className="text-xs text-muted-foreground line-clamp-1">
-                                {item.product.baseColor} {item.product.articleType}
-                              </span>
-                              <span className={`text-xs font-medium ${primaryColor}`}>{item.product.price}</span>
+                  <>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {getWishlistItemsForCurrentPage().map((item) => (
+                        <div key={item.productId} className="border rounded-lg overflow-hidden group relative">
+                          <Link href={`/product/${item.productId}`} className="block">
+                            <div className="aspect-square relative">
+                              <Image
+                                src={item.product.image || "/placeholder.svg?height=300&width=300"}
+                                alt={item.product.name}
+                                fill
+                                className="object-cover"
+                                onError={(e) => {
+                                  ;(e.target as HTMLImageElement).src = "/placeholder.svg?height=300&width=300"
+                                }}
+                              />
+                              {item.product.brand && (
+                                <div
+                                  className={`absolute top-2 left-2 ${primaryBgColor} text-white px-2 py-0.5 rounded text-xs font-medium`}
+                                >
+                                  {item.product.brand}
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        </Link>
+                            <div className="p-3">
+                              <h3 className="font-medium text-sm line-clamp-1 group-hover:text-primary transition-colors">
+                                {item.product.name}
+                              </h3>
+                              <div className="flex justify-between items-center mt-1">
+                                <span className="text-xs text-muted-foreground line-clamp-1">
+                                  {item.product.baseColor} {item.product.articleType}
+                                </span>
+                                <span className={`text-xs font-medium ${primaryColor}`}>{item.product.price}</span>
+                              </div>
+                            </div>
+                          </Link>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 bg-background/80 text-red-500 hover:text-red-700 hover:bg-background"
+                            onClick={() => removeFromWishlist(item.productId)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Remove from wishlist</span>
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Pagination for wishlist */}
+                    {totalWishlistPages > 1 && (
+                      <div className="flex justify-center mt-6 gap-2">
                         <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 bg-background/80 text-red-500 hover:text-red-700 hover:bg-background"
-                          onClick={() => removeFromWishlist(item.productId)}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setWishlistCurrentPage((prev) => Math.max(prev - 1, 1))}
+                          disabled={wishlistCurrentPage === 1}
                         >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Remove from wishlist</span>
+                          Previous
+                        </Button>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: totalWishlistPages }, (_, i) => i + 1).map((page) => (
+                            <Button
+                              key={page}
+                              variant={wishlistCurrentPage === page ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setWishlistCurrentPage(page)}
+                              className={`w-8 h-8 p-0 ${
+                                wishlistCurrentPage === page ? "bg-primary text-primary-foreground" : ""
+                              }`}
+                            >
+                              {page}
+                            </Button>
+                          ))}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setWishlistCurrentPage((prev) => Math.min(prev + 1, totalWishlistPages))}
+                          disabled={wishlistCurrentPage === totalWishlistPages}
+                        >
+                          Next
                         </Button>
                       </div>
-                    ))}
-                  </div>
+                    )}
+
+                    <div className="text-center mt-2 text-sm text-muted-foreground">
+                      Showing {Math.min(wishlistItems.length, (wishlistCurrentPage - 1) * itemsPerPage + 1)}-
+                      {Math.min(wishlistCurrentPage * itemsPerPage, wishlistItems.length)} of {wishlistItems.length}{" "}
+                      items
+                    </div>
+                  </>
                 ) : (
                   <div className="text-center py-12 border rounded-lg">
                     <Heart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -589,7 +700,10 @@ export default function ProfilePage() {
             </TabsContent>
 
             <TabsContent value="analytics">
-              <AnalyticsDashboard />
+              <div className="space-y-8">
+                <AnalyticsDashboard />
+                <KaiTransactions /> {/* Add KAI transactions here */}
+              </div>
             </TabsContent>
 
             {isAdmin && (

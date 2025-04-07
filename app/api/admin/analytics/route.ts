@@ -35,46 +35,64 @@ export async function GET(request: Request) {
     }
 
     // Get basic analytics data
-    const [userCount, totalSearches, chatQueries, cartItems, wishlistItems] = await Promise.all([
-      // User count
-      db
-        .collection("users")
-        .countDocuments(),
+    const [userCount, totalSearches, chatQueries, cartItems, wishlistItems, totalKaiClaimed, totalKaiSpent] =
+      await Promise.all([
+        // User count
+        db
+          .collection("users")
+          .countDocuments(),
 
-      // Total searches
-      db
-        .collection("analytics")
-        .countDocuments({
-          action: { $in: ["search_text", "search_image", "search_multimodal"] },
-        }),
+        // Total searches
+        db
+          .collection("analytics")
+          .countDocuments({
+            action: { $in: ["search_text", "search_image", "search_multimodal"] },
+          }),
 
-      // Chat queries
-      db
-        .collection("analytics")
-        .countDocuments({ action: "chat_query" }),
+        // Chat queries
+        db
+          .collection("analytics")
+          .countDocuments({ action: "chat_query" }),
 
-      // Cart items - count items in all users' carts
-      db
-        .collection("users")
-        .aggregate([
-          { $match: { cart: { $exists: true, $ne: [] } } },
-          { $project: { cartSize: { $size: { $ifNull: ["$cart", []] } } } },
-          { $group: { _id: null, total: { $sum: "$cartSize" } } },
-        ])
-        .toArray()
-        .then((result) => result[0]?.total || 0),
+        // Cart items - count items in all users' carts
+        db
+          .collection("users")
+          .aggregate([
+            { $match: { cart: { $exists: true, $ne: [] } } },
+            { $project: { cartSize: { $size: { $ifNull: ["$cart", []] } } } },
+            { $group: { _id: null, total: { $sum: "$cartSize" } } },
+          ])
+          .toArray()
+          .then((result) => result[0]?.total || 0),
 
-      // Wishlist items - count items in all users' wishlists
-      db
-        .collection("users")
-        .aggregate([
-          { $match: { wishlist: { $exists: true, $ne: [] } } },
-          { $project: { wishlistSize: { $size: { $ifNull: ["$wishlist", []] } } } },
-          { $group: { _id: null, total: { $sum: "$wishlistSize" } } },
-        ])
-        .toArray()
-        .then((result) => result[0]?.total || 0),
-    ])
+        // Wishlist items - count items in all users' wishlists
+        db
+          .collection("users")
+          .aggregate([
+            { $match: { wishlist: { $exists: true, $ne: [] } } },
+            { $project: { wishlistSize: { $size: { $ifNull: ["$wishlist", []] } } } },
+            { $group: { _id: null, total: { $sum: "$wishlistSize" } } },
+          ])
+          .toArray()
+          .then((result) => result[0]?.total || 0),
+
+        // Total KAI claimed
+        db
+          .collection("kai_transactions")
+          .aggregate([
+            { $match: { type: "credit", description: "Signup bonus" } },
+            { $group: { _id: null, total: { $sum: "$amount" } } },
+          ])
+          .toArray()
+          .then((result) => result[0]?.total || 0),
+
+        // Total KAI spent
+        db
+          .collection("kai_transactions")
+          .aggregate([{ $match: { type: "debit" } }, { $group: { _id: null, total: { $sum: "$amount" } } }])
+          .toArray()
+          .then((result) => result[0]?.total || 0),
+      ])
 
     // Get search types distribution
     const searchTypes = await db
@@ -234,6 +252,8 @@ export async function GET(request: Request) {
       usersByDay,
       totalImages,
       totalSearches,
+      totalKaiClaimed,
+      totalKaiSpent,
       searchesByType: formattedSearchTypes,
       chatQueries,
       cartItems,

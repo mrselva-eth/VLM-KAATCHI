@@ -10,6 +10,7 @@ import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
 import { ProfileIcon } from "./profile-icon"
+import { KaiBalance } from "./kai-balance" // Import the KaiBalance component
 
 export function Navbar() {
   const isMobile = useMobile()
@@ -97,7 +98,10 @@ export function Navbar() {
                 </Link>
                 <div className="flex justify-between items-center mt-2">
                   <ModeToggle />
-                  <ProfileIcon />
+                  <div className="flex items-center gap-2">
+                    <KaiBalance /> {/* Add KAI balance here */}
+                    <ProfileIcon />
+                  </div>
                 </div>
               </div>
             )}
@@ -159,6 +163,7 @@ export function Navbar() {
               </Link>
             </div>
             <div className="flex items-center gap-4">
+              <KaiBalance /> {/* Add KAI balance here */}
               <ModeToggle />
               <ProfileIcon />
             </div>
